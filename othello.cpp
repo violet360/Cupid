@@ -6,7 +6,6 @@
 #include<stdlib.h>
 using namespace std;
 
-const bool PLAY_AI = true; // set to true if you want to play the AI
 const int MINIMAX_DEPTH = 5; // depth of the game tree search
 const bool DEBUG_MODE = false;
 
@@ -470,7 +469,6 @@ int main()
     char player = 'b'; // black always goes first
     regex move_input_pattern("[0-7] [0-7]"); // regex for row/col input
 
-    if(PLAY_AI){ // If playing the AI...
 
         regex player_selection_pattern("w|b"); // regex for w/b player selection
         cout << "Enter 'b' to play as black or 'w' to play as white: ";
@@ -620,9 +618,7 @@ continue;
             // Switch players
             player = (player == 'w') ? 'b' : 'w';
 
-        }
-
-    } 
+        } 
     cout << board; // Show final board
     printWinner(board);
     return 0;
