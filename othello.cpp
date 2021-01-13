@@ -1,7 +1,4 @@
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
-#include <cstring>
+#include<bits/stdc++.h>
 typedef long long ll;
 using namespace std;
 
