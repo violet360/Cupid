@@ -178,18 +178,15 @@ vector<vector<int>> calculateLegalMoves(char board[8][8], char player) {
 
 }
 
-// for a given board configuration, determine if a move is legal (searches through a previously generated movelist)
 bool isLegalMove(char board[8][8], vector<vector<int>> move_list, int row, int col, char player) {
     vector<int> proposedMove = {row, col};
 //    for (int i : proposedMove) {
 //        cout << i << ' ';
 //    }
 
-    //This error should NOT occur, as the regex pattern validates the user's input
     if(row > 7 || row < 0 || col > 7 || col < 0)
         throw range_error{"isLegalMove()"};
 
-    // Make sure position is empty
     if(board[row][col] != '-'){
         return false;
     }
@@ -201,17 +198,14 @@ bool isLegalMove(char board[8][8], vector<vector<int>> move_list, int row, int c
     return false;
 }
 
-// return a list of all the moves available to black
 vector<vector<int>> getBlackLegalMoves(char board[8][8]) {
     return calculateLegalMoves(board, 'b');
 }
 
-// return a list of all the moves available to white
 vector<vector<int>> getWhiteLegalMoves(char board[8][8]) {
     return calculateLegalMoves(board, 'w');
 }
 
-// for the passed-in player, print all legal moves (displayed on board update)
 void printLegalMoves(char board[8][8], char player){
     if(player == 'b'){
         cout << "Black legal moves:\n";
@@ -230,7 +224,6 @@ void printLegalMoves(char board[8][8], char player){
     }
 }
 
-// pass in a generated move list to "pretty print" them
 void printLegalMoves(vector<vector<int>> move_list){
     for ( const auto &vec : move_list ){
         cout << "(" << vec[0]  << "," << vec[1] << ")  ";
@@ -238,7 +231,6 @@ void printLegalMoves(vector<vector<int>> move_list){
     cout << endl;
 }
 
-// overload the << operator to "pretty print" the board
 ostream& operator<<(ostream& os, const char board[8][8]){
     cout << "   0  1  2  3  4  5  6  7\n";
     for(int i = 0; i < 8; ++i){
@@ -251,12 +243,10 @@ ostream& operator<<(ostream& os, const char board[8][8]){
     return os;
 }
 
-// used to determine if the game is ended, makes sure at least 1 player has a move to make
 bool isGameOver(char board[8][8]){
     return getBlackLegalMoves(board).empty() && getWhiteLegalMoves(board).empty();
 }
 
-// go through whole board, and count pieces of passed-in player
 int getScore(char board[8][8], char player){
     int total = 0;
     for(int i = 0; i < 8; ++i)
@@ -267,7 +257,6 @@ int getScore(char board[8][8], char player){
     return total;
 }
 
-// "pretty print" the winner of the game at the end of the game loop
 void printWinner(char (&board)[8][8]){
     int white_total = getScore(board, 'w');
     int black_total = getScore(board, 'b');
@@ -282,22 +271,17 @@ void printWinner(char (&board)[8][8]){
     cout << ((black_total > white_total) ? "Black" : "White") << " wins!\n";
 }
 
-// heursitic used to give value to varying states of the game
 int heuristic(char board[8][8]){
 
-    // intialize black and white total
     int b_total = 0;
     int w_total = 0;
 
-    // factor in the amount of moves each player has
     b_total += getBlackLegalMoves(board).size();
     w_total += getWhiteLegalMoves(board).size();
 
-    // factor in the amount of pieces each player has on the board
     b_total += getScore(board, 'b');
     w_total += getScore(board, 'w');
 
-    // factor in the importance of all 4 corners
     if(board[0][0] == 'w'){
         w_total += 10;
     }
@@ -323,11 +307,9 @@ int heuristic(char board[8][8]){
         b_total += 10;
     }
 
-    // subtract white's total from black, let black be the maximizer
     return (b_total-w_total);
 }
 
-// a node which will be part of the game tree, main pieces of info include: state (board configuration) & associated value
 struct Node
 {
     Node ** children;
@@ -337,37 +319,27 @@ struct Node
     int val;
 };
 
-// method used to initialize a game tree (called everytime the AI has a turn)
 Node * CreateTree(char board[8][8], int depth, char player)
 {
     Node * node = new Node();
 
-    // get the appropriate list moves
     node->move_list = (player == 'w') ? getWhiteLegalMoves(board) : getBlackLegalMoves(board);
 
-    // keep a count of children for indexes later on
     node->child_count = node->move_list.size();
 
-    // copy the passed in board state to the state of the current node
     memcpy(node->state, board, 8 * 8 * sizeof(char));
 
-    // determine other player's character
     char other_player = (player == 'w') ? 'b' : 'w';
 
-    // only create children if we're not too deep and this node should have children
     if (depth > 0 && node->child_count > 0) {
-        // create an array of nodes as the children of the current node
         node->children = new Node * [node->child_count];
 
-        // cycle through the children and create nodes for them
         for (int i = 0; i < node->child_count; ++i){
             char tmp_board[8][8];
             memcpy(tmp_board, board, 8 * 8 * sizeof(char));
 
-            // must make the associating move first so a subtree of 'that' board configuration can be created
             makeMove(tmp_board, node->move_list[i][0], node->move_list[i][1], player);
 
-            // turn the child into a tree itself
             node->children[i] = CreateTree(tmp_board, depth - 1, other_player);
         }
     } else {
@@ -377,26 +349,20 @@ Node * CreateTree(char board[8][8], int depth, char player)
     return node;
 }
 
-// crucial minimax method for making smart AI choices (other methods may be added in the future)
 int minimax(Node *position, int depth, int alpha, int beta, bool maximizing_player){
 
-    // if we're at the final layer or this state is a dead sate, return static heurstic
     if(depth == 0 || isGameOver(position->state)){
         //cout<< "returning heursitic: " << heuristic(position->state) << '\n';
         return heuristic(position->state);
     }
 
-    // if maximizing layer...
     if(maximizing_player){
-        int max_eval = -9999999; // set max to worst case
+        int max_eval = -9999999; 
 
-        // for all of the children nodes, recursively call minimax
-        // decrease the depth parameter with each call, so we can guarantee we will get to the base case above
         for(int i = 0; i < position->child_count; ++i){
             int eval = minimax(position->children[i], depth - 1, alpha, beta, false);
-            max_eval = max(max_eval, eval); // update max if evaluation is >
+            max_eval = max(max_eval, eval); 
 
-            //update alpha appropriately, and check for eligibility of alpha prune
             alpha = max(alpha, eval);
             if(beta <= alpha) {
                 if (DEBUG_MODE) {
@@ -405,50 +371,23 @@ int minimax(Node *position, int depth, int alpha, int beta, bool maximizing_play
                 break;
             }
         }
-        position->val = max_eval; // store the max_eval in this node
-        return max_eval;
-    } else { // minimizing layer...
-        int min_eval = 9999999; // set min to worst case
-        for(int i = 0; i < position->child_count; ++i){
-            int eval = minimax(position->children[i], depth -1, alpha, beta, true);
-            min_eval = min(min_eval, eval); // update min if evaluation is <
-
-            // update beta appropriately, and check for eligibility of beta prune
-            beta = min(beta, eval);
-            if(beta <= alpha)
-                break;
-        }
-        position->val = min_eval; // store min_eval in this node
-        return min_eval;
-    }
-}
-
-// simplified minimax without alpha-beta pruning, similar to above
-int minimax(Node *position, int depth, bool maximizing_player){
-    //cout << "DEPTH = " << depth << '\n';
-    if(depth == 0 || isGameOver(position->state)){
-        //cout<< "returning heursitic: " << heuristic(position->state) << '\n';
-        return heuristic(position->state);
-    }
-
-    if(maximizing_player){
-        int max_eval = -9999999;
-        for(int i = 0; i < position->child_count; ++i){
-            int eval = minimax(position->children[i], depth - 1, false);
-            max_eval = max(max_eval, eval);
-        }
         position->val = max_eval;
         return max_eval;
     } else {
         int min_eval = 9999999;
         for(int i = 0; i < position->child_count; ++i){
-            int eval = minimax(position->children[i], depth -1, true);
-            min_eval = min(min_eval, eval);
+            int eval = minimax(position->children[i], depth -1, alpha, beta, true);
+            min_eval = min(min_eval, eval); 
+
+            beta = min(beta, eval);
+            if(beta <= alpha)
+                break;
         }
-        position->val = min_eval;
+        position->val = min_eval; 
         return min_eval;
     }
 }
+
 
 int main() 
 {
@@ -463,17 +402,14 @@ int main()
 
     board[3][3] = 'w'; board[3][4] = 'b';
     board[4][3] = 'b'; board[4][4] = 'w';
-    //************************************
 
     int total_moves = 0;
-    char player = 'b'; // black always goes first
-    regex move_input_pattern("[0-7] [0-7]"); // regex for row/col input
+    char player = 'b';
+    regex move_input_pattern("[0-7] [0-7]");
 
-
-        regex player_selection_pattern("w|b"); // regex for w/b player selection
+        regex player_selection_pattern("w|b"); 
         cout << "Enter 'b' to play as black or 'w' to play as white: ";
         string selected_player;
-        // loop until user makes a valid choice of player
         while(true)
         {
             getline(cin, selected_player);
@@ -489,31 +425,23 @@ continue;
         char player_char = selected_player[0];
         cout << "You have chosen to play as " << ((player_char == 'w') ? "white" : "black") << "!\n\n";
 
-        // set AI as the opposite of what the player chose
         char ai_char = ((player_char == 'w') ? 'b' : 'w');
         int count = 0;
 
-        // main game loop
         while(!isGameOver(board))
         {
 
-
-            // calculate the move list of the current player
             vector<vector<int>> move_list = calculateLegalMoves(board, player);
 
-            //************ TURN PASS CONDITIONS **********************
             if (player == 'b' && getBlackLegalMoves(board).empty()){
-                //cout << "Black is out of moves, PASS to White.\n";
                 player = 'w';
                 continue;
             }
 
             if (player == 'w' && getWhiteLegalMoves(board).empty()){
-                //cout << "White is out of moves, PASS to Black.\n";
                 player = 'b';
                 continue;
             }
-            //*********************************************************
 
             int white_total = getScore(board, 'w');
             int black_total = getScore(board, 'b');
@@ -521,16 +449,14 @@ continue;
             cout << "Black total: " << black_total << '\n';
             cout << "White total: " << white_total << '\n';
 
-            cout << board; // show board
+            cout << board; 
             cout << '\n';
             if(player == player_char)
             {
-                printLegalMoves(board, player_char); // show possible moves
+                printLegalMoves(board, player_char);
 
                 string user_input;
-                // loop until user provides a legal move in the correct row/col format
                 while(true){
-                    // Print input prompt
                     cout << ((player == 'w') ? "Your move (w): " : "Your move (b): ");
                     getline(cin, user_input);
 
@@ -543,15 +469,12 @@ continue;
 
                     else
                     {
-                        // user_input = [<some num>, " ", <some num>], nums will be at indices 0 and 2
-                        // subtract '0's ascii value (48) from the user nums to get the real integer
                         int row = user_input[0] - '0';
                         int col = user_input[2] - '0';
 
 
 
                         try{
-                            // if the inserted move is legal, make the move
                             if(isLegalMove(board, move_list, row, col, player)){
                                 makeMove(board, row, col, player);
                             } else {
@@ -566,17 +489,14 @@ continue;
                     }
 
                 }
-                // user has finished turn
 
             } 
             else 
-            { // AI turn
-                    auto gametree = CreateTree(board, MINIMAX_DEPTH, player); // game tree representing MINIMAX_DEPTH decisions
+            {
+                    auto gametree = CreateTree(board, MINIMAX_DEPTH, player);
                     bool maximizer = (player == 'b') ? true : false;
 
-                    // find optimal value
                     int optimial_val = minimax(gametree, MINIMAX_DEPTH, -99999999, 99999999, maximizer);
-                    //int optimial_val = minimax(gametree, MINIMAX_DEPTH, maximizer);
 
                     if(DEBUG_MODE){
                         cout << "DEBUG: AI considered " << gametree->child_count << " initial moves for this board configuration.\n";
@@ -587,8 +507,6 @@ continue;
                         cout << '\n';
                     }
 
-                    //cout << "Optimal val: " << optimial_val << '\n';
-                    // loop through children of root node to find the node with the optimal value
                     for(int i = 0; i < gametree->child_count; ++i){
                         //cout << gametree->children[i]->val << '\n';
                         if(gametree->children[i]->val == optimial_val){
@@ -601,10 +519,9 @@ continue;
                             }
                             //cout << "the " << i << "th child of gametree has the optimizal value.\n";
 
-                            // copy this optimial choice of node's state into the main game board
                             if(!same_config)
                                 memcpy(board, gametree->children[i]->state, 8 * 8 * sizeof(char));
-                            else{ // if no good move for ai, just pick the first move from the legal move list
+                            else{
                                 makeMove(board, move_list[0][0], move_list[0][1], player);
                             }
                             break;
@@ -613,13 +530,12 @@ continue;
             }
 
             total_moves += 1;
-            //cout << '\n' << gb; // Show board
+            //cout << '\n' << gb;
 
-            // Switch players
             player = (player == 'w') ? 'b' : 'w';
 
-        } 
-    cout << board; // Show final board
+        }
+    cout << board;
     printWinner(board);
     return 0;
 }
