@@ -177,7 +177,6 @@ void getMove(char board[][8], ll &x, ll &y, char piece)
     }
     else
     {
-        // ll i = rand() % numMoves;
         cout<<"their are "<<numMoves<<" moves"<<"\n";
         for(ll i=0; i<numMoves; ++i)
         {
