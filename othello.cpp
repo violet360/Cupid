@@ -367,7 +367,6 @@ int main()
             //cin >> x >> y;
             g.makeDes(board, curPlayer, x, y, false); //true if you want AI to play
             // g.minimaxDecision(board, 'O', x, y);
-            //getRandomMove(board, x, y, 'O');
         else
             g.getMove(board, x, y, 'X');
             // g.makeDes()
