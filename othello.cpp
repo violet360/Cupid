@@ -1,4 +1,5 @@
 #include<bits/stdc++.h>
+# define FAST_CODE ios_base::sync_with_stdio(false); cin.tie(NULL);
 typedef long long ll;
 using namespace std;
 
@@ -350,6 +351,7 @@ ll minimaxValue(char board[][8], ll alpha, ll beta, char originalTurn, char curr
 
 int main()
 {
+    FAST_CODE
     srand(time(NULL));
     char board[8][8];
     char curPlayer = 'X';
