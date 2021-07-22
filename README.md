@@ -7,4 +7,4 @@ An AI to play othello against you , won't kill humans or money back guaranteed
 * `./a.out`
 
 ## Play
-* Pair of integers to make a move row first then column
+* Enter a valid pair of integers shown by the system to make a move, row first, then column
